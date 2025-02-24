@@ -253,8 +253,9 @@ def load_media_info(path):
             Size of file.
 
     """
-    if path[:5] == "s3://":
-        return load_media_info_s3(path)
+    if not isinstance(path, io.BytesIO):
+        if path[:5] == "s3://":
+            return load_media_info_s3(path)
     audio_info = soundfile.info(path)
     filesize = media_size(path)
     return audio_info.samplerate, audio_info.channels, audio_info.duration, audio_info.subtype, filesize
