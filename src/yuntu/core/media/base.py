@@ -135,7 +135,6 @@ class Media(ABC, AnnotatedObjectMixin):
             return False
 
         if not isinstance(path, str):
-            print(type(path))
             return True
 
         if "s3://" == path[:5]:
