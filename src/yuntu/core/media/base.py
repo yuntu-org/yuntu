@@ -135,7 +135,8 @@ class Media(ABC, AnnotatedObjectMixin):
             return False
 
         if not isinstance(path, str):
-            return False
+            print(type(path))
+            return True
 
         if "s3://" == path[:5]:
             from s3fs.core import S3FileSystem
