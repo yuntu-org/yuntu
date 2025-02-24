@@ -26,25 +26,35 @@ def tmp_file(basename):
     with open(filename, 'wb') as tmpfile:
         yield filename, tmpfile
 
-
-def download_file(url):
+def download_file_alt(r):
     buffer = io.BytesIO()
-    r = requests.get(url, stream=True)
-
-    file_size = int(r.headers['Content-Length'])
     chunk_size = 1024
-    num_bars = int(file_size / chunk_size)
-    iterable = tqdm(
-        r.iter_content(chunk_size=chunk_size),
-        total=num_bars,
-        desc=url,
-        leave=True,
-        unit='KB')
-
-    for chunk in iterable:
-        buffer.write(chunk)
+    for chunk in r.iter_content(chunk_size=chunk_size):
+        if chunk:  
+            buffer.write(chunk)
     buffer.seek(0)
     return buffer
+
+def download_file(url):
+    r = requests.get(url, stream=True)
+    if "Content-Length" in r.headers:
+        buffer = io.BytesIO()
+        file_size = int(r.headers['Content-Length'])
+        chunk_size = 1024
+        num_bars = int(file_size / chunk_size)
+        iterable = tqdm(
+            r.iter_content(chunk_size=chunk_size),
+            total=num_bars,
+            desc=url,
+            leave=True,
+            unit='KB')
+    
+        for chunk in iterable:
+            buffer.write(chunk)
+        buffer.seek(0)
+        return buffer
+    else:
+        return download_file_alt(r)
 
 
 def scp_file(src, dest):
