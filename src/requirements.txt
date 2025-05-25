@@ -13,6 +13,7 @@ dill==0.3.1.1
 distributed>=2.15.0,<=2.30.1
 fastparquet>0.3.3
 fsspec==0.7.3
+guano>=1.0.15
 HeapDict==1.0.1
 idna>=2.8,<2.9
 imageio==2.8.0

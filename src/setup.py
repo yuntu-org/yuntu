@@ -39,6 +39,7 @@ else:
                         'fastparquet',
                         'pyarrow',
                         'pygraphviz',
+                        'guano',
                         'pymongo']
     if sys.version[:3] == '3.7':
         install_requires.append('pickle-mixin')
