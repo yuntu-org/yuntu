@@ -1,4 +1,4 @@
-"""Prebuilt t datastores for common cases."""
+"""Prebuilt datastore for AudioMoth recorders"""
 
 import os
 from collections import OrderedDict

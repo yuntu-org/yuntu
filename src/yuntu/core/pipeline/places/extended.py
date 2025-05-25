@@ -251,7 +251,7 @@ class DaskArrayPlace(DynamicPlace, DaskArrayMixin):
 
 class DaskSeriesPlace(Place, DaskSeriesMixin):
     """Dask series input."""
-    data_class = dd.core.Series
+    data_class = dd.Series
 
     def write(self, path=None, data=None):
         if path is None:
@@ -316,7 +316,7 @@ class DaskDelayedPlace(DynamicPlace, DaskDelayedMixin):
 
 class DaskDataFramePlace(Place, DaskDataFrameMixin):
     """Dask dataframe input."""
-    data_class = dd.core.DataFrame
+    data_class = dd.DataFrame
 
     def write(self, path=None, data=None):
         if path is None:
@@ -363,12 +363,12 @@ class DaskDataFramePlace(Place, DaskDataFrameMixin):
 
 class DaskSeriesGroupByPlace(DynamicPlace, DaskSeriesGroupByMixin):
     """Dask series groupby input."""
-    data_class = dd.groupby.SeriesGroupBy
+    data_class = pd.api.typing.SeriesGroupBy
 
 
 class DaskDataFrameGroupByPlace(DynamicPlace, DaskSeriesMixin):
     """Dask delayed input."""
-    data_class = dd.groupby.DataFrameGroupBy
+    data_class = pd.api.typing.DataFrameGroupBy
 
 
 PLACES = OrderedDict()

@@ -196,6 +196,8 @@ class Geometry(ABC):
                     data["min_freq"] = min_freq
                     data["max_freq"] = max_freq
                 del data["wkt"]
+        elif Geometry.Types.Weak == geom_class.name:
+            del data["wkt"]
 
         return geom_class(**data)
 
