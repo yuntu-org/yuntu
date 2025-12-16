@@ -211,6 +211,13 @@ def bag_dataframe(dataframe, npartitions):
     if size <= 0:
         raise ValueError(f"Too many partitions. Max is {total} for this dataframe.")
 
-    dict_dataframe = [dataframe.iloc[i*size : min((i+1)*size, total)].to_dict(orient="records") for i in range(npartitions)]
-
+    dict_dataframe = []
+    for i in range(npartitions):
+        start = i*size
+        end = min((i+1)*size, total)
+        if i == npartitions -1:
+            end = total
+        dict_dataframe.append(dataframe.iloc[start : end].to_dict(orient="records"))
+        
     return db.from_sequence(dict_dataframe, npartitions=npartitions)
+
