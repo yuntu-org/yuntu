@@ -9,7 +9,7 @@ from abc import abstractmethod
 import os
 import pickle
 import pandas as pd
-from pony.orm import db_session, CacheIndexError
+from pony.orm import db_session, CacheIndexError, TransactionIntegrityError
 from yuntu.core.audio.utils import read_info, hash_file, ag_glob
 
 
@@ -71,11 +71,13 @@ class Datastore(ABC):
         datastore_record = self.create_datastore_record(collection)
         datastore_record.flush()
         datastore_id = datastore_record.id
-
-        recording_inserts = 0
+    
+        media_inserts = 0
         annotation_inserts = 0
-        recording_insert_errors = 0
+        media_insert_errors = 0
         annotation_insert_errors = 0
+        media_insert_duplicates = 0
+        
         for datum in self.iter():
             try:
                 meta = self.prepare_datum(datum)
@@ -84,27 +86,39 @@ class Datastore(ABC):
             if meta is not None:
                 meta['path'] = self.get_abspath(meta['path'])
                 meta['datastore'] = datastore_record
+                matches = list(collection.db_manager.select(query=f"lambda m: m.path == '{meta['path']}' or m.hash == '{meta['hash']}'",
+                                                            model="recording"))
+                if len(matches) > 0:
+                    media_insert_duplicates += 1
+                    continue
+                
                 try:
-                    recording = collection.insert(meta)[0]
+                    #media = collection.insert(meta, self.db_model)[0]
+                    media = collection.insert(meta)[0]
+                except TransactionIntegrityError as e:
+                    print(e)
+                    media_insert_duplicates += 1
+                    continue
                 except CacheIndexError as e:
                     print(e)
-                    recording_insert_errors += 1
+                    media_insert_errors += 1
                     continue
-
+    
                 for annotation in self.iter_annotations(datum):
                     annotation_meta = self.prepare_annotation(datum, annotation)
                     if annotation_meta is not None:
-                        annotation_meta['recording'] = recording
+                        #annotation_meta[self.db_model] = media
+                        annotation_meta['recording'] = media
                         collection.annotate([annotation_meta])
                         annotation_inserts += 1
                     else:
                         annotation_insert_errors += 1
-
-                recording_inserts += 1
+    
+                media_inserts += 1
             else:
-                recording_insert_errors += 1
-
-        return datastore_id, recording_inserts, annotation_inserts, recording_insert_errors, annotation_insert_errors
+                media_insert_errors += 1
+    
+        return datastore_id, media_inserts, annotation_inserts, media_insert_duplicates, media_insert_errors, annotation_insert_errors
 
     def get_recording_dataframe(self, with_annotations=False):
         data = []
