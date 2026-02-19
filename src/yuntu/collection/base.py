@@ -94,7 +94,7 @@ class Collection:
             yield self.build_audio(recording)
 
     def __len__(self):
-        return len(self.recordings())
+        return self.recordings().count()
 
     def get(self, key, with_metadata=True):
         """Get Audio object by key.
