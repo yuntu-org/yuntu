@@ -1,9 +1,10 @@
 """Base classes for collection."""
 import os
 import json
+import numpy as np
 import pandas as pd
 import shapely.wkt
-
+from pony.orm import raw_sql
 from yuntu.core.database.base import DatabaseManager
 from yuntu.core.database.timed import TimedDatabaseManager
 from yuntu.core.database.spatial import SpatialDatabaseManager
@@ -123,6 +124,7 @@ class Collection:
             offset=0,
             with_metadata=False,
             with_annotations=False,
+            ids=None,
             **kwargs):
         """Get audio dataframe from query.
 
@@ -141,16 +143,29 @@ class Collection:
             Wether to include metadata in the response or not.
         with_annotations : bool
             Wether to include annotations in the response or not.
+        ids : np.array
+            An array of identifiers to get from the database.
 
         Returns
         -------
         recording_dataframe : pandas.DataFrame
             A dataframe holding recordings.
         """
+        if ids is not None:
+            if not type(ids) == np.ndarray:
+                raise ValueError("The 'ids' parameter should be of type numpy.ndarray")
+            if not len(ids) > 0:
+                return []
+            if not issubclass(type(ids[0]), np.integer):
+                raise ValueError("The elements of 'ids' should be integers") 
+            ids_str = ", ".join(str(i) for i in ids)
+            query = lambda m: raw_sql(f"m.id IN ({ids_str})")
+        
         if limit is None:
             query_slice = slice(offset, None)
         else:
             query_slice = slice(offset, offset + limit)
+        
         recordings = self.recordings(query=query, **kwargs).order_by(lambda r: r.id)[query_slice]
 
         records = []
@@ -177,7 +192,9 @@ class Collection:
             query=None,
             limit=None,
             offset=0,
-            with_metadata=None):
+            with_metadata=None,
+            ids=None, 
+            **kwargs):
         """Get annotation dataframe from query.
 
         Fetch recording entries and build a pandas dataframe compatible with
@@ -193,12 +210,24 @@ class Collection:
             Skip this many entries and return the rest up to limit.
         with_metadata: bool
             Wether to include metadata in the response or not.
+        ids : np.array
+            An array of identifiers to get from the database.
 
         Returns
         -------
         annotation_dataframe: pandas.DataFrame
             A dataframe holding annotations.
         """
+        if ids is not None:
+            if not type(ids) == np.ndarray:
+                raise ValueError("The 'ids' parameter should be of type numpy.ndarray")
+            if not len(ids) > 0:
+                return []
+            if not issubclass(type(ids[0]), np.integer):
+                raise ValueError("The elements of 'ids' should be integers") 
+            ids_str = ", ".join(str(i) for i in ids)
+            query = lambda a: raw_sql(f"a.id IN ({ids_str})")
+        
         if limit is None:
             query_slice = slice(offset, None)
         else:
@@ -559,7 +588,45 @@ class SpatialCollection(Collection):
             with_metadata=False,
             with_annotations=False,
             with_geometry=False,
+            ids=None,
             **kwargs):
+        """Get audio dataframe from query.
+
+        Fetch recording entries and build a pandas dataframe compatible with
+        AudioAccessor.
+
+        Parameters
+        ----------
+        query : callable
+            A function that conforms to Pony's query syntax.
+        limit : int
+            The number of maximum entries to return.
+        offset : int
+            Skip this many entries and return the rest up to limit.
+        with_metadata : bool
+            Wether to include metadata in the response or not.
+        with_annotations : bool
+            Wether to include annotations in the response or not.
+        with_geometry: bool
+            Wether to include coordinates as a geometry object in the response or not.
+        ids : np.array
+            An array of identifiers to get from the database.
+
+        Returns
+        -------
+        recording_dataframe : pandas.DataFrame
+            A dataframe holding recordings.
+        """
+        if ids is not None:
+            if not type(ids) == np.ndarray:
+                raise ValueError("The 'ids' parameter should be of type numpy.ndarray")
+            if not len(ids) > 0:
+                return []
+            if not issubclass(type(ids[0]), np.integer):
+                raise ValueError("The elements of 'ids' should be integers") 
+            ids_str = ", ".join(str(i) for i in ids)
+            query = lambda m: raw_sql(f"m.id IN ({ids_str})")
+        
         if limit is None:
             query_slice = slice(offset, None)
         else:
